@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "qk": {
+      "commandName": "Project",
+      "commandLineArgs": "go setting net"
+    }
+  }
+}
