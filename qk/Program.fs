@@ -1,5 +1,5 @@
 ﻿(*
-    A simple utility made by kxxt (https://github.com/kxxt)
+    A simple utility made by kxxt (https://github.com/kxxt/qk)
     |> while learning F#
 *)
 open System.Diagnostics
@@ -25,18 +25,13 @@ type Address =
             ) |> Process.Start
         |> ignore
 
-let changeDirectory dir =
-    printfn "cd into %s" dir
-
 type Command = 
     | Go of Address option
     | Launch of string option
-    | Cd of string option
     member this.execute() =
         match this with
         | Go(Some addr) -> addr.execute()
         | Launch(Some str) -> shellExecute str |> ignore
-        | Cd(Some dir) -> changeDirectory(dir)
         | _ -> printfn "%s" "We can't understand your command."
 
 let parseLocationArgument strs = 
@@ -92,12 +87,10 @@ let (|ParseCommand|_|) strs =
     | head::tail ->
         match head with 
         | "go" | "goto" -> Some(Go(parseGoArgument(tail)))
-        | "cd" -> Some(Cd(parseLocationArgument(tail)))
         | "launch" | "app" | "start" ->
             Some(Launch(parseLaunchArgument(tail)))
         | _ -> None
     | [] -> None
-
 
 [<EntryPoint>]
 let main argv =
@@ -105,6 +98,6 @@ let main argv =
     | ParseCommand command -> command.execute()
     | head::_ -> printfn "Invalid command: %s" head
     | [] -> printfn """qk: A simple quick tool written in F#.
-Available commands: go(goto), cd, launch(app/start)        
+Available commands: go(goto), launch(app/start)        
 """
     0 // return an integer exit code
