@@ -6,16 +6,20 @@ open System.Diagnostics
 
 
 let dataDrive = "D:\\"
+let username = "Administrator"
 
 let shellExecute str = 
     ProcessStartInfo(FileName=str,UseShellExecute=true) |> Process.Start
+let shellExecuteNoConsole str = 
+    ProcessStartInfo(FileName=str,UseShellExecute=true, WindowStyle=ProcessWindowStyle.Hidden) |> Process.Start
+
 type Address = 
     | LocalFS of string
     | URL of string
     | App of string
     member this.execute() =
         match this with
-        | App str -> shellExecute str
+        | App str -> shellExecuteNoConsole str
         | URL str -> shellExecute str
         | LocalFS str -> 
             ProcessStartInfo(
@@ -31,7 +35,7 @@ type Command =
     member this.execute() =
         match this with
         | Go(Some addr) -> addr.execute()
-        | Launch(Some str) -> shellExecute str |> ignore
+        | Launch(Some str) -> shellExecuteNoConsole str |> ignore
         | _ -> printfn "%s" "We can't understand your command."
 
 let parseLocationArgument strs = 
@@ -59,7 +63,53 @@ let parseLocationArgument strs =
     | [] -> None
 
 let parseLaunchArgument strs = 
-    None
+    match strs with
+    | head::tail -> 
+        match head with
+        // Programming tools
+        | "vs" -> Some @"C:\Program Files\Microsoft Visual Studio\2022\Preview\Common7\IDE\devenv.exe"
+        | "vsc" | "code" -> Some "code"
+        | "npp" -> Some @"C:\Program Files\Notepad++\notepad++.exe"
+        // Game Platforms
+        | "ubi" | "ubisoft" -> Some @"C:\Program Files (x86)\Ubisoft\Ubisoft Game Launcher\UbisoftConnect.exe"
+        | "steam" -> Some @"C:\Program Files (x86)\Steam\steam.exe"
+        // Games
+        | "ass" -> 
+            match tail with
+            | "origin"::_ -> Some "uplay://launch/3539/0"
+            | "rogue"::_ -> Some "uplay://launch/895/0"
+            | "odyssey"::_ -> Some "uplay://launch/5059/0"
+            | "black"::_ -> Some "uplay://launch/273/0"
+            | _ -> None
+        | "teardown" -> Some "steam://rungameid/1167630"
+        // Reader
+        | "winds" | "wind" -> Some @"C:\Users\rswor\AppData\Local\Programs\Winds\Winds.exe"
+        // IM & Social Medias
+        | "tg" | "telegram" -> Some @$"C:\Users\{username}\AppData\Roaming\Telegram Desktop\Telegram.exe"
+        // Office
+        | "word" -> Some @"C:\Program Files\Microsoft Office\root\Office16\WINWORD.EXE"
+        | "ppt" | "powerpoint" -> Some @"C:\Program Files\Microsoft Office\root\Office16\POWERPNT.EXE"
+        | "onenote" -> Some  @"C:\Program Files\Microsoft Office\root\Office16\ONENOTE.EXE"
+        | "excel" -> Some @"C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE"
+        // Markdown
+        | "typora" -> Some @"C:\Program Files\Typora\Typora.exe"
+        | "notion" -> Some @$"C:\Users\{username}\AppData\Local\Programs\Notion\Notion.exe"
+        // Adobe
+        | "ps" | "photoshop" -> Some @"C:\Program Files\Adobe Photoshop CC 2018\Photoshop.exe"
+        | "pr" | "premiere" -> Some @"C:\Program Files\Adobe Premiere Pro CC 2018\Adobe Premiere Pro.exe"
+        | "lr" | "lightroom" -> Some @"C:\Program Files\Adobe Lightroom Classic CC\Lightroom.exe"
+        | "ai" | "illustrator" -> Some @"C:\Program Files\Adobe Illustrator CC 2018\Support Files\Contents\Windows\Illustrator.exe"
+        | "ae" | "aftereffects" | "afftereffect" | "afterfx" -> Some "C:\Program Files\Adobe After Effects CC 2018\Support Files\AfterFX.exe"
+        | "au" | "audition" -> Some @"C:\Program Files\Adobe Audition CC 2018\Adobe Audition CC.exe"
+        // Proxy
+        | "clash" -> Some @$"C:\Users\{username}\AppData\Local\Programs\Clash for Windows\Clash for Windows.exe"
+        | "qv2ray" -> Some @"C:\Program Files\qv2ray\qv2ray.exe"
+        // Networking
+        | "fiddler" -> Some @$"C:\Users\{username}\AppData\Local\Programs\Fiddler\Fiddler.exe"
+        | "shark" | "wireshark" -> Some @"C:\Program Files\Wireshark\Wireshark.exe" 
+        // Not matched
+        | _ -> None
+    | [] -> None
 
 let parseGoArgument strs = 
     match parseLocationArgument strs with
